@@ -144,9 +144,18 @@ const getSongArr = (playList) => {
 
   return arraySongObjects;
 };
+
+const isString = (input) => {
+  if (!(typeof input === 'string')) {
+    return false;
+  }
+  return true;
+};
+
 /*---------------------------
 // END OF HELPER FUNCTIONS //
 ----------------------------*/
+// Keep track of Id's
 let nextSongId = 9;
 let nextPlaylistId = 4;
 
@@ -157,18 +166,22 @@ let nextPlaylistId = 4;
 app.get('/api/v1/songs', (req, res) => {
   const filter = req.query.filter ? req.query.filter.trim() : "";
 
-  if (!filter) {
+  if (!filter) { // if there is no filter, just return all songs straight away
     return res.status(200).json(songs);
   }
-
   const newFilterArr = getAllSongsFilter(filter);
-  return res.status(200).json(newFilterArr);
+  return res.status(200).json(newFilterArr); 
 });
 
 app.post('/api/v1/songs', (req, res) => {
   if (!req.body.title || !req.body.artist) {
     return res.status(400).json({ message: 'Both "title" and "artist" fields are required.' });
   }
+
+  else if (!(isString(req.body.title)) || !(isString(req.body.artist))) {
+    return res.status(400).json({ message: 'Both "title" and "artist" must be strings' });
+  }
+
 
   const newSong = { id: nextSongId, title: req.body.title, artist: req.body.artist };
 
@@ -191,6 +204,22 @@ app.patch('/api/v1/songs/:songId', (req, res) => {
 
   if (req.body.title === undefined && req.body.artist === undefined) {
     return res.status(400).json({ message: 'At least one field ("title" or "artist") must be provided for update.' });
+  }
+  let isInputAString = true;
+
+  Object.values(req.body).forEach((value) => {
+    if (!isString(value)) {
+      isInputAString = false;
+    }
+  });
+
+  if (!isInputAString) {
+    return res.status(400).json({ message: 'All edited fields must be of the string type' });
+
+  }
+
+  if (!isInputAString) {
+    return res.status(400).json({ message: 'Everything that is being updated need to be of a string format' });
   }
 
   const updatedSong = updateItem(songID, availableEditOptions, songs, req.body);
@@ -246,6 +275,11 @@ app.get('/api/v1/playlists/:playListID', (req, res) => {
 app.post('/api/v1/playlists', (req, res) => {
   if (!req.body.name) {
     return res.status(400).json({ message: 'The "name" field is required.' });
+  }
+
+
+  else if (!(typeof req.body.name === 'string')) {
+    return res.status(400).json({ message: 'Both "title" and "artist" must be strings' });
   }
 
   const newPlaylist = { id: nextPlaylistId, name: req.body.name, songIds: [] };
